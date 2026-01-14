@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Big City Flavors</title>
   <meta name="description" content="Big City Flavors — Live menu, ordering, and contact." />
+  <link rel="icon" type="image/png" href="assets/favicon.png" />
 
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
@@ -28,7 +29,6 @@
       --video-opacity: 0.90;
       --fx-opacity: 0.36;
 
-      
       /* Glass morphism */
       --glass-bg: rgba(17,24,39,0.6);
       --glass-border: rgba(6,182,212,0.15);
@@ -176,19 +176,7 @@
       padding-right: clamp(24px, 4vw, 60px);
     }
 
-    /* At page top: keep it cinematic (hero-only) */
-    body.at-top .topnav{
-      opacity: 0;
-      transform: translateY(-10px);
-      pointer-events: none;
-      transition: opacity .28s ease, transform .28s ease;
-    }
-    .topnav{
-      transition: opacity .28s ease, transform .28s ease;
-      will-change: opacity, transform;
-    }
-
-    /* Top navigation */
+    /* Top navigation - hidden at top, visible when scrolling */
     .topnav{
       position: fixed;
       top: 0;
@@ -201,6 +189,16 @@
       -webkit-backdrop-filter: blur(20px) saturate(180%);
       border-bottom: 1px solid var(--glass-border);
       box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      opacity: 1;
+      transform: translateY(0);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+      will-change: opacity, transform;
+    }
+    /* Hide navbar when at page top */
+    body.at-top .topnav{
+      opacity: 0;
+      transform: translateY(-20px);
+      pointer-events: none;
     }
     .nav-inner{
       width: min(1040px, 100%);
@@ -1692,7 +1690,6 @@
         <div class="nav-actions" role="navigation" aria-label="Primary links">
           <button class="nav-link" id="btnShop" type="button"> Shop Here</button>
           <button class="nav-link" id="btnContact" type="button">Contact</button>
-          <button class="nav-link" id="btnDutchie" type="button">Admin Control</button>
         </div>
       </div>
     </header>
@@ -1977,32 +1974,35 @@
     </div>
   </div>
 
-  <script
-  src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"
-  integrity="sha512-7eHRwcbYkK4d9g/6tD/mhkf++eoTHwpNM9woBxtPUBWm67zeAfFC+HrdoE2GanKeocly/VxeLvIqwvCdk7qScg=="
-  crossorigin="anonymous">
-</script>
-
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 
   <script>
     document.documentElement.classList.add("js-enhanced");
     // ====== LINKS ======
     const URL_SHOP    = "https://bigcityflavors.com/?page_id=315";
-    const URL_DUTCHIE = "https://bigcityflavors.com/?page_id=70";
 
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+    // Get the scrollable container
+    const scrollContainer = document.querySelector('.wrap');
+    
     const setAtTop = () => {
-      const atTop = (window.scrollY || document.documentElement.scrollTop || 0) < 10;
+      const scrollTop = scrollContainer ? scrollContainer.scrollTop : (window.scrollY || document.documentElement.scrollTop || 0);
+      const atTop = scrollTop < 10;
       document.body.classList.toggle("at-top", atTop);
     };
     setAtTop();
-    window.addEventListener("scroll", setAtTop, { passive: true });
+    
+    // Listen to scroll on the actual container
+    if (scrollContainer) {
+      scrollContainer.addEventListener("scroll", setAtTop, { passive: true });
+    } else {
+      window.addEventListener("scroll", setAtTop, { passive: true });
+    }
 
     // ====== UI ======
     const btnShop = document.getElementById("btnShop");
-    const btnDutchie = document.getElementById("btnDutchie");
     const btnContact = document.getElementById("btnContact");
     const contactModal = document.getElementById("contactModal");
     const closeContact = document.getElementById("closeContact");
@@ -2014,7 +2014,6 @@
     const ctaContact = document.getElementById("ctaContact");
 
     btnShop.addEventListener("click", () => window.location.href = URL_SHOP);
-    btnDutchie.addEventListener("click", () => window.location.href = URL_DUTCHIE);
 
     btnContact.addEventListener("click", () => contactModal.classList.add("show"));
     closeContact.addEventListener("click", () => contactModal.classList.remove("show"));
@@ -2056,25 +2055,10 @@
       ageNoBtn.classList.toggle("primary", locked);
     };
 
-    // ====== AGE GATE PERSISTENCE ======
-
-// Check localStorage for confirmed age
-const ageYesStored = localStorage.getItem("ageVerified") === "true";
-
-// Show the gate if user has NOT confirmed
-if (!ageYesStored) {
-  setGateOpen(true);
-  setLocked(false);
-} else {
-  setGateOpen(false);
-}
-
-ageYesBtn.addEventListener("click", () => {
-  localStorage.setItem("ageVerified", "true");
-  setLocked(false);
-  setGateOpen(false);
-});
-
+    // Always show on refresh (no persistence)
+    const ageOk = false;
+    setGateOpen(true);
+    setLocked(false);
 
     ageYesBtn.addEventListener("click", () => {
       setLocked(false);
